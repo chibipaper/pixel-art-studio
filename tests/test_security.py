@@ -43,7 +43,7 @@ class SecurityRegressions(unittest.TestCase):
     def test_generated_code_does_not_run_on_parse(self):
         with tempfile.TemporaryDirectory() as tmp:
             marker = Path(tmp) / "executed"
-            code = "from pathlib import Path\\nPath(" + repr(str(marker)) + ").write_text('bad')\\n"
+            code = "from pathlib import Path\nPath(" + repr(str(marker)) + ").write_text('bad')\n"
             ast.parse(code)
             self.assertFalse(marker.exists())
 
