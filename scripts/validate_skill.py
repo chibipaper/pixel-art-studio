@@ -33,7 +33,7 @@ def run():
     with tempfile.TemporaryDirectory(prefix='pixel-studio-check-') as work:
         work = Path(work)
         skill = work / 'skill'
-        shutil.copytree(root, skill, ignore=shutil.ignore_patterns('__pycache__'))
+        shutil.copytree(root, skill, ignore=shutil.ignore_patterns('__pycache__', '.git', '.venv', '.pytest_cache'))
         sys.path.insert(0, str(skill / 'scripts'))
         from PIL import Image
         from pixelstudio import Sprite, detect_scale
@@ -42,6 +42,13 @@ def run():
         art = work / 'art'
         art.mkdir()
         _run_checked([sys.executable, str(skill / 'examples/slime-build.py')], cwd=art)
+        # Representative checked-in animation and LPC examples run in the disposable copy.
+        _run_checked([sys.executable, str(skill / 'examples/capybara-4dir.py')], cwd=art)
+        with Image.open(art / 'capy_walk_down.gif') as capy:
+            assert capy.n_frames == 4
+        assert Image.open(art / 'spritesheet.png').size == (128, 128)
+        _run_checked([sys.executable, str(skill / 'pixel-art/catmage-lpc/build.py')])
+        assert Image.open(skill / 'pixel-art/catmage-lpc/catmage_lpc.png').size == (832, 1344)
         master = art / 'slime.png'
         assert Image.open(master).size == (32, 32)
         assert Image.open(art / 'slime@8x.png').size == (256, 256)
