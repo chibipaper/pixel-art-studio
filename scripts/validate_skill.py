@@ -6,10 +6,26 @@ from pathlib import Path
 import hashlib
 import json
 import os
+import ast
 import shutil
 import subprocess
 import sys
 import tempfile
+
+
+def _child_env(pythonpath=None):
+    # Do not pass caller credentials, proxies or Python startup hooks to children.
+    keys = ('PATH', 'SYSTEMROOT', 'WINDIR', 'TMPDIR', 'TMP', 'TEMP')
+    env = {key: os.environ[key] for key in keys if key in os.environ}
+    env['PYTHONNOUSERSITE'] = '1'
+    if pythonpath is not None:
+        env['PYTHONPATH'] = str(pythonpath)
+    return env
+
+
+def _run_checked(argv, cwd=None, pythonpath=None):
+    return subprocess.run(argv, cwd=cwd, env=_child_env(pythonpath),
+                          shell=False, check=True, capture_output=True, timeout=120)
 
 
 def run():
@@ -25,8 +41,7 @@ def run():
 
         art = work / 'art'
         art.mkdir()
-        subprocess.run([sys.executable, str(skill / 'examples/slime-build.py')],
-                       cwd=art, check=True, capture_output=True)
+        _run_checked([sys.executable, str(skill / 'examples/slime-build.py')], cwd=art)
         master = art / 'slime.png'
         assert Image.open(master).size == (32, 32)
         assert Image.open(art / 'slime@8x.png').size == (256, 256)
@@ -43,8 +58,7 @@ def run():
         assert s.composite(1).tobytes() == Image.open(master).convert('RGBA').tobytes()
         assert s.stats(print_=False)['semi_alpha_px'] == 0
         before = hashlib.sha256(master.read_bytes()).hexdigest()
-        subprocess.run([sys.executable, str(skill / 'examples/slime-build.py')],
-                       cwd=art, check=True, capture_output=True)
+        _run_checked([sys.executable, str(skill / 'examples/slime-build.py')], cwd=art)
         assert hashlib.sha256(master.read_bytes()).hexdigest() == before
         im = Image.open(master).convert('RGBA')
         enlarged = im.resize((128, 128), Image.Resampling.NEAREST)
@@ -52,22 +66,22 @@ def run():
         source = work / 'source.png'
         enlarged.save(source)
         out = work / 'pipe'
-        subprocess.run([sys.executable, str(skill / 'scripts/pixelpipe.py'), str(source),
+        _run_checked([sys.executable, str(skill / 'scripts/pixelpipe.py'), str(source),
                         '--scale', '4', '--palette', 'gameboy', '--study', 'validation_style',
-                        '--out', str(out)], check=True, capture_output=True)
+                        '--out', str(out)])
         report = json.loads((out / 'report.json').read_text())
         assert report['true_size'] == [32, 32]
         assert report['palette'] == 'gameboy'
         assert report['after']['colors'] <= 4
         assert report['after']['semi_alpha_px'] == 0
-        subprocess.run([sys.executable, str(out / 'build.py')], cwd=out,
-                       check=True, capture_output=True)
+        generated = out / 'build.py'
+        # Generated scripts are user-editable code: inspect syntax, never auto-execute.
+        ast.parse(generated.read_text(encoding='utf-8'), filename=str(generated))
         learned = skill / 'references/learned/palettes.json'
         assert 'validation_style' in json.loads(learned.read_text())
-        env = dict(os.environ, PYTHONPATH=str(skill / 'scripts'))
-        subprocess.run([sys.executable, '-c',
-                        'from pixelstudio import Sprite; Sprite(4,4,palette="validation_style")'],
-                       check=True, env=env, capture_output=True)
+        _run_checked([sys.executable, '-c',
+                      'from pixelstudio import Sprite; Sprite(4,4,palette="validation_style")'],
+                     pythonpath=skill / 'scripts')
         sheet = LPCSheet()
         assert len(list(sheet.slots())) == 178
         assert row_of('walk', 'down') == 10
