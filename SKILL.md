@@ -1,6 +1,6 @@
 ---
 name: pixel-art-studio
-description: Claude IS the pixel artist — designs and places every pixel directly via Python/Pillow (scripts/pixelstudio.py). No Aseprite, no MCP server. Creates sprites, characters, items, tiles/tilesets, animations (idle/walk/run/attack), applies limited palettes, hue-shifted ramps, dithering, shading, selective outlines, and exports PNG / animated GIF / spritesheet+JSON for game engines. Can also STUDY a pixel-art file the user provides and grow its knowledge base. PREFER THIS SKILL over pixel-art-creator / pixel-art-animator / pixel-art-professional / pixel-art-exporter (those require the aseprite MCP) unless the user explicitly asks for Aseprite. Trigger on pixel art, sprite, sprite sheet, 8-bit, 16-bit, retro game art, tileset, pixel animation, GIF sprite, วาด pixel art, สร้าง sprite, ทำ pixel art, พิกเซล, ตัวละครเกม, ไอคอนเกม, เรียนรู้จากไฟล์ pixel art.
+description: Use when the user requests code-authored pixel art, retro sprites, tilesets, sprite animation, palette conversion, deterministic cleanup of supplied pixel art, or study of a pixel-art reference. Also use when Pixel Art Studio is named. For image-model creation or editing, use the image generation tool first; this skill handles subsequent deterministic cleanup when requested.
 ---
 
 # Pixel Art Studio
@@ -10,7 +10,19 @@ Self-contained studio: you author a **build script** that draws every pixel with
 eyes**, critique, fix, repeat. That see→critique→fix loop is the entire quality engine —
 never skip it. You are the artist; the library is just your hand.
 
-Requirement: `python3 -c "import PIL"` — if missing, `pip3 install --user pillow`.
+Resolve `<skill>` to this file's containing directory. Requires Python 3.9+ and Pillow 9+.
+Check the selected Python interpreter with `python3 -c "import PIL; print(PIL.__version__)"`.
+If missing, use a task-local virtual environment and `python -m pip install 'Pillow>=9'`;
+use that environment's interpreter consistently. No API keys, Aseprite, or MCP server needed.
+
+Read [implementation-notes.md](references/implementation-notes.md) before using the API;
+it records source-verified indexing, cleanup, study, and LPC caveats. Detailed behavior
+comes from the bundled Python implementation when upstream prose disagrees.
+
+When creating a build.py, insert the **resolved absolute** `<skill>/scripts` path (as a
+proper Python string literal), or use an explicit configurable path. Never guess a
+user home directory. Bundled examples resolve scripts relative to themselves; when
+copying them into an artwork directory, replace that import path accordingly.
 
 ## The Loop
 
@@ -23,7 +35,7 @@ Requirement: `python3 -c "import PIL"` — if missing, `pip3 install --user pill
    twice — animation frames become function calls.
 
    ```python
-   import sys; sys.path.insert(0, "/Users/game/Projects/.claude/skills/pixel-art-studio/scripts")
+   import sys; sys.path.insert(0, "<resolved-absolute-skill-directory>/scripts")
    from pixelstudio import Sprite, PALETTES, ramp, mix
 
    BODY = ramp("#38b764", 5)            # hue-shifted 5-step ramp from a base color
@@ -39,11 +51,11 @@ Requirement: `python3 -c "import PIL"` — if missing, `pip3 install --user pill
    s.stats()                            # and read these numbers
    ```
 3. **Run** — `cd pixel-art/<slug> && python3 build.py`
-4. **LOOK** — Read `preview.png` (plus `s.save_silhouette()` / `s.zoom()` when unsure).
+4. **LOOK** — Use an available image viewer to inspect `preview.png` (plus `s.save_silhouette()` / `s.zoom()` when unsure).
    Critique against the checklist in `references/validations.md`, point by point, honestly.
 5. **Fix** — edit build.py, rerun. Minimum 2–3 loop passes before showing the user.
 6. **Deliver** — export master PNG at 1x **and** a display scale (4–8x), GIF/spritesheet
-   if animated, then `open` the output files (user preference).
+   if animated, then show the resulting PNG/GIF with absolute-path Markdown media embeds and link the build.py and engine JSON. Open a native viewer if requested.
 
 Work at true pixel size always; scale is an export-time concern and **integer only**.
 
@@ -100,7 +112,7 @@ study only in those locations.
 4. Add one line to `<skill>/references/learned/INDEX.md` in the same change.
 5. If the lesson generalizes beyond one visual style (animation, export, validation, cleanup,
    etc.), also update the relevant `<skill>/references/*.md` rule file and Knowledge routing.
-6. `--save-palette <name>` makes the palette available forever as `Sprite(palette="<name>")`;
+6. `study.py --save-palette <name>` makes the palette available forever as `Sprite(palette="<name>")`;
    verify that the saved palette data is also under `<skill>`, not beside the input file.
 7. Before finishing, verify every newly learned durable file resolves under `<skill>`.
 
@@ -108,9 +120,9 @@ When later creating art in a studied style: open the matching card and follow it
 
 ## Hybrid pipeline — from generated/messy art (the "B" path)
 
-When the user wants pixel art from an **image model** (codex-imagegen, SD+LoRA, FLUX, PixelLab
+When the user wants pixel art from an **image model** (image generation, SD+LoRA, FLUX, PixelLab
 export, a screenshot, or any messy PNG), this skill is the deterministic cleanup + lock + animate
-layer. Use `references/cleanup.md` for the full playbook. One command does the whole import→clean:
+layer. Use `references/cleanup.md` for the full playbook. The CLI performs import→clean; style-card authoring remains manual:
 
 ```bash
 python3 <skill>/scripts/pixelpipe.py <gen.png> --strip-checker --max-colors 24 --display 6
@@ -120,7 +132,7 @@ python3 <skill>/scripts/pixelpipe.py <gen.png> --palette my_game
 python3 <skill>/scripts/pixelpipe.py <gen.png> --strip-checker --study knight_style
 ```
 
-It recovers the true grid (block-sampling for sloppy upscales), strips baked-in checkerboards,
+It estimates/reconstructs the pixel grid (verify the recovered size), optionally strips light-gray pixels,
 hardens alpha, despeckles, dedupes colors, locks the palette, and emits `clean.png` + a
 regenerable `build.py` you keep editing. After cleaning, switch back to the normal Loop
 (edit/animate/palette-swap deterministically) — that's where the skill beats the generator.
@@ -130,4 +142,8 @@ regenerable `build.py` you keep editing. After cleaning, switch back to the norm
 - Artworks live in `./pixel-art/<slug>/` (build.py + all outputs together).
 - Never hand-edit exported PNGs — edit build.py and rerun.
 - Randomness only via `noise(seed=)` — renders must be deterministic.
-- Deliverables get `open`ed when done; report includes the 1x master path.
+- Deliverables are shown with absolute-path media embeds; report includes the 1x master path.
+- Use the source-derived runnable example `examples/slime-build.py` for a complete four-frame export, `examples/capybara-4dir.py` for directional walks, or `examples/anime-cast.py` for a cast. Run examples from a disposable output directory; outputs use the current working directory.
+- Source and adaptation details: [provenance.md](references/provenance.md).
+- To verify this installation after changes, run `python3 <skill>/scripts/validate_skill.py`; it uses a temporary copy and does not alter durable palettes. See [validation.md](references/validation.md) for the conversion checks and limits.
+

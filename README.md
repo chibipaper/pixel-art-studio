@@ -33,7 +33,34 @@ the build script, and re-renders — minimum 2–3 passes before delivering.
    a build script to keep editing and animating deterministically. Best for richly-detailed art
    where a model's composition shines but you still need clean, consistent, editable pixels.
 
-## Install
+## Install for Codex
+
+```bash
+git clone https://github.com/chibipaper/pixel-art-studio.git
+mkdir -p ~/.codex/skills
+cp -R pixel-art-studio ~/.codex/skills/pixel-art-studio
+python3 -m venv ~/.codex/skills/pixel-art-studio/.venv
+~/.codex/skills/pixel-art-studio/.venv/bin/python -m pip install 'Pillow>=9'
+```
+
+Invoke `$pixel-art-studio` in Codex. Use the virtual environment's Python for
+build scripts and bundled tools. The skill resolves its own installed directory;
+no Claude-specific paths or Aseprite server are required. The four original
+Python engines remain unchanged.
+
+Validate the installation:
+
+```bash
+~/.codex/skills/pixel-art-studio/.venv/bin/python ~/.codex/skills/pixel-art-studio/scripts/validate_skill.py
+```
+
+Tests run in a temporary skill copy so learned palettes stay untouched.
+See [implementation notes](references/implementation-notes.md) for source-verified
+API caveats and [validation](references/validation.md) for tested scope.
+Style study saves a palette and prints a card skeleton; writing the completed
+style card and updating its index remain manual steps.
+
+## Original Claude installation
 
 ```bash
 git clone https://github.com/Gamezxz/pixel-art-studio.git
@@ -175,3 +202,4 @@ vocabulary, so a whole cast looks like one game. See `references/cleanup.md`.
 ## License
 
 MIT © [Gamezxz](https://github.com/Gamezxz)
+

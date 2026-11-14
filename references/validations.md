@@ -35,6 +35,7 @@ Evidence: preview.png (scale 8–10), silhouette.png, stats() output, zoom() whe
 - [ ] 1x master PNG saved; display copies integer-scaled only
 - [ ] GIF: bg composite for social OR hard-edged transparency; durations ≥40ms
 - [ ] spritesheet JSON frameTags match designed tags; padding set for engine use
-- [ ] outputs opened for the user; 1x master path reported
+- [ ] outputs displayed for the user (native viewer if requested); 1x master path reported
 
 Verdict line: **SHIP / FIX (list)** — if FIX, the list becomes the next edit plan.
+

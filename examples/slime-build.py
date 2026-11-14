@@ -2,7 +2,8 @@
 """Demo/test: 32x32 green slime, 4-frame idle bounce — exercises the full pixelstudio API."""
 import sys
 
-sys.path.insert(0, "/Users/game/Projects/.claude/skills/pixel-art-studio/scripts")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from pixelstudio import Sprite, ramp
 
 BODY = ramp("#38b764", 5, hue_shift=18)   # dark -> light greens
@@ -80,3 +81,4 @@ s.save_gif("slime_transparent.gif", scale=6)
 s.save_spritesheet("slime_sheet.png", layout="horizontal", padding=1)
 s.save_project("slime.pxproj.json")
 print("OK")
+
