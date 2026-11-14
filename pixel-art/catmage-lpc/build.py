@@ -5,7 +5,8 @@ Chibi (~34px) from the anime cast, drawn per-view with pose tables, assembled
 by scripts/lpc.py. Staff swings with a sparkle arc on the slash contact frames.
 """
 import sys, os, math
-sys.path.insert(0, "/Users/game/.claude/skills/pixel-art-studio/scripts")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 from pixelstudio import Sprite, ramp
 from lpc import LPCSheet
 from PIL import Image
