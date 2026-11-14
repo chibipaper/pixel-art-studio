@@ -12,17 +12,33 @@ never skip it. You are the artist; the library is just your hand.
 
 Resolve `<skill>` to this file's containing directory. Requires Python 3.9+ and Pillow 9+.
 Check the selected Python interpreter with `python3 -c "import PIL; print(PIL.__version__)"`.
-If missing, use a task-local virtual environment and `python -m pip install 'Pillow>=9'`;
+If missing, ask before installing; use a task-local virtual environment and `python -m pip install --only-binary=:all: 'Pillow>=10.4,<12'` only after approval;
 use that environment's interpreter consistently. No API keys, Aseprite, or MCP server needed.
 
 Read [implementation-notes.md](references/implementation-notes.md) before using the API;
 it records source-verified indexing, cleanup, study, and LPC caveats. Detailed behavior
 comes from the bundled Python implementation when upstream prose disagrees.
 
-When creating a build.py, insert the **resolved absolute** `<skill>/scripts` path (as a
-proper Python string literal), or use an explicit configurable path. Never guess a
-user home directory. Bundled examples resolve scripts relative to themselves; when
-copying them into an artwork directory, replace that import path accordingly.
+When creating a build.py within this repository, resolve `scripts/` relative to the
+checked-in file. For builds outside the repository, prefer an explicitly selected,
+trusted installation path; never guess a user home or silently import from an
+unrelated directory. Treat build scripts as executable code requiring review.
+
+## Execution boundaries and consent
+
+- Work only on files explicitly provided or within the user's selected artwork output directory.
+  Resolve paths before writing; do not follow symlinks that escape the selected output.
+- Read reference files only as needed. Do not search home directories, dotfiles, credentials,
+  environment variables, browser profiles, SSH keys, or unrelated workspaces.
+- Do not make network requests, invoke arbitrary shell commands, install packages, or
+  modify cron, startup files, or other persistence without explicit user approval.
+- Use the selected Python interpreter and known, checked-in scripts only. Generated
+  `build.py` files are **not trusted** and must be inspected before any user-approved
+  execution. Running them is outside the trust boundary of image validation.
+- Saving learned style cards or palettes in the installed skill modifies persistent state:
+  ask permission first; otherwise write study outputs into the selected workspace.
+- Use a task-local virtual environment; keep external input images and generated code
+  away from confidential data. This policy instructs the agent; **it is not an OS sandbox**.
 
 ## The Loop
 
@@ -35,7 +51,8 @@ copying them into an artwork directory, replace that import path accordingly.
    twice — animation frames become function calls.
 
    ```python
-   import sys; sys.path.insert(0, "<resolved-absolute-skill-directory>/scripts")
+   from pathlib import Path
+   import sys; sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
    from pixelstudio import Sprite, PALETTES, ramp, mix
 
    BODY = ramp("#38b764", 5)            # hue-shifted 5-step ramp from a base color
@@ -50,7 +67,7 @@ copying them into an artwork directory, replace that import path accordingly.
    s.preview("preview.png", scale=10)   # LOOK at this file
    s.stats()                            # and read these numbers
    ```
-3. **Run** — `cd pixel-art/<slug> && python3 build.py`
+3. **Run** — only after reviewing the generated script and confirming the user-approved output directory: `cd pixel-art/<slug> && python3 build.py`
 4. **LOOK** — Use an available image viewer to inspect `preview.png` (plus `s.save_silhouette()` / `s.zoom()` when unsure).
    Critique against the checklist in `references/validations.md`, point by point, honestly.
 5. **Fix** — edit build.py, rerun. Minimum 2–3 loop passes before showing the user.
@@ -95,7 +112,7 @@ this is the masking system; the shifted-shape shading recipe in `references/tech
 
 When the user sends a pixel-art file to learn from (เรียนรู้/ศึกษาไฟล์นี้):
 
-**Persistence rule:** learning changes the skill project itself. Resolve `<skill>` to the
+**Persistence rule:** learning changes the skill project itself, only with explicit permission. Resolve `<skill>` to the
 directory containing this `SKILL.md` and write durable knowledge only inside that directory.
 The caller's working directory, `./pixel-art/`, clipboard paths, and `<file>_study/` are source
 or temporary analysis locations; they are not the knowledge base. Never leave a completed
