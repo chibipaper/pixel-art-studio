@@ -40,13 +40,13 @@ git clone https://github.com/chibipaper/pixel-art-studio.git
 mkdir -p ~/.codex/skills
 cp -R pixel-art-studio ~/.codex/skills/pixel-art-studio
 python3 -m venv ~/.codex/skills/pixel-art-studio/.venv
-~/.codex/skills/pixel-art-studio/.venv/bin/python -m pip install 'Pillow>=9'
+~/.codex/skills/pixel-art-studio/.venv/bin/python -m pip install --only-binary=:all: 'Pillow>=10.4,<12'
 ```
 
 Invoke `$pixel-art-studio` in Codex. Use the virtual environment's Python for
 build scripts and bundled tools. The skill resolves its own installed directory;
-no Claude-specific paths or Aseprite server are required. The four original
-Python engines remain unchanged.
+no Claude-specific paths or Aseprite server are required. Reviewed example imports
+resolve inside this repository.
 
 Validate the installation:
 
@@ -71,8 +71,8 @@ pip3 install pillow
 Then just ask Claude Code: *"draw a 64x64 dragon boss"*, *"make a 4-frame slime idle animation"*,
 *"turn this sprite into a Game Boy palette"*.
 
-> Note: SKILL.md examples reference the skill path — adjust the `sys.path.insert` path in the
-> examples if you install somewhere other than a `.claude/skills/pixel-art-studio` folder.
+> Note: examples in this fork use repository-relative paths. Do not copy their import
+> statements blindly into an unrelated folder: resolve the trusted install explicitly.
 
 ## What's inside
 
@@ -203,3 +203,24 @@ vocabulary, so a whole cast looks like one game. See `references/cleanup.md`.
 
 MIT © [Gamezxz](https://github.com/Gamezxz)
 
+
+## Security and execution boundaries
+
+This skill is **not a sandbox**. Installing and reading it does not require executing
+artwork generators, but running a Python build script grants it normal Python access to
+files, processes, and the network under your account. Inspect generated or user-supplied
+Python before running it; prefer a disposable environment with no secrets or network.
+The validator checks syntax of `pixelpipe`'s generated `build.py` and never executes it.
+It still runs known checked-in examples to validate exports, in a temporary copy.
+
+Do not grant arbitrary shell/network/filesystem permissions to the agent merely because
+this skill is installed. Authorize a specific workspace, review output destinations and
+confirm before persisting palettes into `references/learned`. Dependency installation
+should be a separate, approved setup step in a virtual environment. The Pillow range
+above limits major upgrades but does not cryptographically pin a wheel; for sensitive
+systems use a reviewed, hash-locked requirements file from a trusted mirror.
+
+See [security review](references/security-review.md) for the 19 scanner findings,
+mitigations, limitations and regression-test scope. Run the stdlib checks with
+`python -m unittest discover -s tests -v` and the Pillow integration checks with
+`python scripts/validate_skill.py` in a disposable environment.

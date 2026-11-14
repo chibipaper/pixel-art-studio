@@ -6,7 +6,8 @@ onto the LPC grid by scripts/lpc.py. Steel armor ramp, spear thrust-swung as
 the "slash" action (windup -> jab -> recover).
 """
 import sys, os, math
-sys.path.insert(0, "/Users/game/.claude/skills/pixel-art-studio/scripts")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 from pixelstudio import Sprite, ramp
 from lpc import LPCSheet
 from PIL import Image

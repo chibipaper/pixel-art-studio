@@ -5,7 +5,8 @@ Sprout on head, green swirl scarf, tan body with dark muzzle patch.
 32x32 per frame, 4 dirs (down/left/right/up) x 4-frame walk.
 """
 import sys, os
-sys.path.insert(0, "/Users/game/.claude/skills/pixel-art-studio/scripts")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 from pixelstudio import Sprite
 from PIL import Image
 

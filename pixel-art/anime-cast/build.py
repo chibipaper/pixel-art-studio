@@ -5,7 +5,8 @@ One script, one shared discipline: selout outline, 3-step hue-shifted ramps,
 no dither, silhouette-first. Every character is a draw(s, f) function.
 """
 import sys, os
-sys.path.insert(0, "/Users/game/.claude/skills/pixel-art-studio/scripts")
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 from pixelstudio import Sprite, ramp
 from PIL import Image
 
