@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """codex slime bounce sheet -> clean transparent GIF (+1x frames)."""
 import sys, os
+from pathlib import Path
 from PIL import Image
 
-sys.path.insert(0, '/Users/game/Projects/pixel-art-studio/scripts')
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from pixelstudio import Sprite
 
 SRC, OUT, TARGET_H = sys.argv[1], sys.argv[2], int(sys.argv[3]) if len(sys.argv) > 3 else 64
