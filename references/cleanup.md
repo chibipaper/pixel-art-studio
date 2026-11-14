@@ -47,7 +47,7 @@ s.save_png("clean.png")
 
 ### Recover the true grid — `from_png(scale=, strip_bg=)`
 - `scale="auto"`: detects an exact integer upscale (NEAREST recovery); if none, estimates the
-  run-length and falls back to **block-center sampling** (handles sloppy/resampled model output
+  run-length and falls back to **dominant-color block sampling** (handles sloppy/resampled model output
   that would otherwise produce mixels).
 - Pass a **float** (e.g. `5.7`) to force block sampling at a non-integer scale.
 - `strip_bg=True`: removes a baked-in light-gray checkerboard (very common in AI-gen exports).
@@ -84,10 +84,10 @@ can damage legit light edge shading. Turn on when you see a visible fringe ring.
 | Source | Recommended `clean()` |
 |---|---|
 | clean PixelLab-style export (already gridded) | `max_colors=24, dedupe_tol=8` (light touch) |
-| diffusion "pixel art" (fuzzy, many colors) | `harden=True, despeckle=3, dedupe_tol=14, max_colors=24` |
+| diffusion "pixel art" (fuzzy, many colors) | `harden=True, despeckle_min=3, dedupe_tol=14, max_colors=24` |
 | screenshot with checker bg | `strip_bg=True` first, then defaults |
 | scanned / photographed pixel art | `--scale FLOAT` forced + `dehalo=True` |
-| painterly alpha art (soft edges intended) | `harden_steps=[0,80,160,255]`, `despeckle=0` |
+| painterly alpha art (soft edges intended) | `harden_steps=[0,80,160,255]`, `despeckle_min=0` |
 
 ## After cleaning: the skill's real advantage kicks in
 
@@ -99,7 +99,7 @@ this skill beats any generator:
 - **Animate deterministically**: split into part-layers, puppet with `shift()`/parametric redraw —
   the same character across every frame, guaranteed (see animation.md).
 - **Palette-swap variants**: `replace()` per ramp step → enemy color variants in seconds.
-- **Study it**: `--study NAME` extracts the style into a card + saved palette, so the *next*
+- **Study it**: `--study NAME` saves a palette and prints a card skeleton; inspect the images, then write the card and update INDEX.md manually, so the *next*
   asset you generate matches.
 
 ## Honest limits
@@ -110,3 +110,4 @@ this skill beats any generator:
   animate** on generated bases, not replacing the generator for novel high-detail composition.
 - Auto scale-detection is heuristic. When you know the source scale, pass `--scale N` for exact
   recovery.
+

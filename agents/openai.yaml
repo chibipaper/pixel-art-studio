@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pixel Art Studio"
+  short_description: "Code-authored sprites, animation, cleanup and study"
+  default_prompt: "Use $pixel-art-studio to create a pixel sprite with a reproducible build script and inspected exports."
